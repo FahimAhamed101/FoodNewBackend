@@ -1,0 +1,334 @@
+{
+  "info": {
+    "name": "Admin Feedback/Review System",
+    "description": "Complete admin feedback and review management APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Get All Reviews (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/admin/feedback/all?page=1&limit=20",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "admin", "feedback", "all"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1",
+              "description": "Page number"
+            },
+            {
+              "key": "limit",
+              "value": "20",
+              "description": "Items per page"
+            },
+            {
+              "key": "rating",
+              "value": "5",
+              "description": "Filter by rating (1-5)",
+              "disabled": true
+            },
+            {
+              "key": "providerId",
+              "value": "{{providerId}}",
+              "description": "Filter by provider",
+              "disabled": true
+            },
+            {
+              "key": "sortBy",
+              "value": "createdAt",
+              "description": "Sort field",
+              "disabled": true
+            },
+            {
+              "key": "sortOrder",
+              "value": "desc",
+              "description": "asc or desc",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Get all reviews across all providers (Admin only)"
+      },
+      "response": []
+    },
+    {
+      "name": "2. Get Provider Reviews",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/admin/feedback/provider/{{providerId}}?page=1&limit=20",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "admin", "feedback", "provider", "{{providerId}}"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "20"
+            },
+            {
+              "key": "rating",
+              "value": "5",
+              "description": "Filter by rating",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Get all reviews for a specific provider"
+      },
+      "response": []
+    },
+    {
+      "name": "3. Get Provider Rating Stats",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/admin/feedback/stats/{{providerId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "admin", "feedback", "stats", "{{providerId}}"]
+        },
+        "description": "Get rating statistics for a provider"
+      },
+      "response": []
+    },
+    {
+      "name": "4. Get Single Review Details",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/admin/feedback/{{reviewId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "admin", "feedback", "{{reviewId}}"]
+        },
+        "description": "Get detailed information about a specific review"
+      },
+      "response": []
+    },
+    {
+      "name": "5. Reply to Review (Admin)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"replyText\": \"Thank you for your feedback! We appreciate your support and will continue to improve our service.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/admin/feedback/{{reviewId}}/reply",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "admin", "feedback", "{{reviewId}}", "reply"]
+        },
+        "description": "Admin can reply to any review on behalf of the platform"
+      },
+      "response": []
+    },
+    {
+      "name": "6. Delete Review (Admin)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/admin/feedback/{{reviewId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "admin", "feedback", "{{reviewId}}"]
+        },
+        "description": "Delete inappropriate or spam reviews"
+      },
+      "response": []
+    },
+    {
+      "name": "7. Get Reviews by Rating",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/admin/feedback/all?rating=1&page=1&limit=20",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "admin", "feedback", "all"],
+          "query": [
+            {
+              "key": "rating",
+              "value": "1",
+              "description": "Get 1-star reviews (change to 2,3,4,5)"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "20"
+            }
+          ]
+        },
+        "description": "Filter reviews by specific rating (useful for finding low-rated reviews)"
+      },
+      "response": []
+    },
+    {
+      "name": "8. Get Recent Reviews",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/admin/feedback/all?sortBy=createdAt&sortOrder=desc&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "admin", "feedback", "all"],
+          "query": [
+            {
+              "key": "sortBy",
+              "value": "createdAt"
+            },
+            {
+              "key": "sortOrder",
+              "value": "desc"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        },
+        "description": "Get the 10 most recent reviews"
+      },
+      "response": []
+    },
+    {
+      "name": "9. Get Food Reviews",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/admin/feedback/food/{{foodId}}?page=1&limit=20",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "admin", "feedback", "food", "{{foodId}}"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "20"
+            }
+          ]
+        },
+        "description": "Get reviews for a specific food item (public access)"
+      },
+      "response": []
+    },
+    {
+      "name": "10. Get Provider Reviews (Public)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/reviews/provider/{{providerId}}?page=1&limit=20",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "reviews", "provider", "{{providerId}}"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "20"
+            }
+          ]
+        },
+        "description": "Public endpoint to get provider reviews (no auth required)"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "YOUR_ADMIN_TOKEN_HERE",
+      "type": "string"
+    },
+    {
+      "key": "providerId",
+      "value": "PROVIDER_ID_HERE",
+      "type": "string"
+    },
+    {
+      "key": "reviewId",
+      "value": "REVIEW_ID_HERE",
+      "type": "string"
+    },
+    {
+      "key": "foodId",
+      "value": "FOOD_ID_HERE",
+      "type": "string"
+    }
+  ]
+}

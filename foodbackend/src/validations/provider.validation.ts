@@ -1,0 +1,182 @@
+import { z } from 'zod';
+
+const sortBySchema = z
+    .enum(['distance', 'rating', 'name'])
+    .optional()
+    .default('distance');
+
+const parseQueryNumber = (value: unknown) => {
+    const rawValue = Array.isArray(value) ? value[0] : value;
+
+    if (rawValue === undefined || rawValue === null || rawValue === '') {
+        return undefined;
+    }
+
+    const parsed = Number(rawValue);
+    return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+/**
+ * Validation schema for nearby providers search
+ */
+export const nearbyProvidersSchema = z.object({
+    body: z.object({
+        latitude: z
+            .number()
+            .min(-90, 'Latitude must be between -90 and 90')
+            .max(90, 'Latitude must be between -90 and 90'),
+        
+        longitude: z
+            .number()
+            .min(-180, 'Longitude must be between -180 and 180')
+            .max(180, 'Longitude must be between -180 and 180'),
+        
+        radius: z
+            .number()
+            .positive('Radius must be a positive number')
+            .max(100, 'Radius cannot exceed 100 km')
+            .optional()
+            .default(3), // Default 3 km radius
+        
+        page: z
+            .number()
+            .int()
+            .positive()
+            .optional()
+            .default(1),
+        
+        limit: z
+            .number()
+            .int()
+            .positive()
+            .max(100, 'Limit cannot exceed 100')
+            .optional()
+            .default(20),
+        
+        cuisine: z
+            .string()
+            .optional(),
+        
+        sortBy: sortBySchema
+    })
+});
+
+export const nearbyProvidersQuerySchema = z.object({
+    query: z.object({
+        latitude: z.preprocess(
+            parseQueryNumber,
+            z
+                .number()
+                .min(-90, 'Latitude must be between -90 and 90')
+                .max(90, 'Latitude must be between -90 and 90')
+                .optional()
+        ),
+
+        longitude: z.preprocess(
+            parseQueryNumber,
+            z
+                .number()
+                .min(-180, 'Longitude must be between -180 and 180')
+                .max(180, 'Longitude must be between -180 and 180')
+                .optional()
+        ),
+
+        radius: z.preprocess(
+            parseQueryNumber,
+            z
+                .number()
+                .positive('Radius must be a positive number')
+                .max(100, 'Radius cannot exceed 100 km')
+                .optional()
+                .default(10)
+        ),
+
+        page: z.preprocess(
+            parseQueryNumber,
+            z
+                .number()
+                .int()
+                .positive()
+                .optional()
+                .default(1)
+        ),
+
+        limit: z.preprocess(
+            parseQueryNumber,
+            z
+                .number()
+                .int()
+                .positive()
+                .max(100, 'Limit cannot exceed 100')
+                .optional()
+                .default(100)
+        ),
+
+        cuisine: z
+            .string()
+            .optional(),
+
+        sortBy: sortBySchema
+    })
+});
+
+export const nearbyDonatedFoodsSchema = z.object({
+    body: z.object({
+        latitude: z.preprocess(
+            parseQueryNumber,
+            z
+                .number()
+                .min(-90, 'Latitude must be between -90 and 90')
+                .max(90, 'Latitude must be between -90 and 90')
+                .optional()
+        ),
+
+        longitude: z.preprocess(
+            parseQueryNumber,
+            z
+                .number()
+                .min(-180, 'Longitude must be between -180 and 180')
+                .max(180, 'Longitude must be between -180 and 180')
+                .optional()
+        ),
+
+        radius: z.preprocess(
+            parseQueryNumber,
+            z
+                .number()
+                .positive('Radius must be a positive number')
+                .max(100, 'Radius cannot exceed 100 km')
+                .optional()
+                .default(10)
+        ),
+
+        page: z.preprocess(
+            parseQueryNumber,
+            z
+                .number()
+                .int()
+                .positive()
+                .optional()
+                .default(1)
+        ),
+
+        limit: z.preprocess(
+            parseQueryNumber,
+            z
+                .number()
+                .int()
+                .positive()
+                .max(100, 'Limit cannot exceed 100')
+                .optional()
+                .default(100)
+        ),
+
+        cuisine: z
+            .string()
+            .optional(),
+
+        sortBy: sortBySchema
+    })
+});
+
+export type NearbyProvidersInput = z.infer<typeof nearbyProvidersSchema>['body'];

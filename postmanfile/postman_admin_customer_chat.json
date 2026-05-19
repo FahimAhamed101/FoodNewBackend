@@ -1,0 +1,270 @@
+{
+  "info": {
+    "name": "Admin ↔ Customer Chat System",
+    "description": "Complete Admin and Customer messaging system API collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api/v1" },
+    { "key": "adminToken", "value": "PASTE_ADMIN_JWT_TOKEN_HERE" },
+    { "key": "customerToken", "value": "PASTE_CUSTOMER_JWT_TOKEN_HERE" },
+    { "key": "customerId", "value": "" },
+    { "key": "conversationId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "👤 CUSTOMER SIDE",
+      "item": [
+        {
+          "name": "1. Customer → Start conversation with Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/chat/customer/start-admin-conversation", "host": ["{{baseUrl}}"], "path": ["chat", "customer", "start-admin-conversation"] },
+            "description": "Customer starts a conversation with admin. Admin ID is auto-resolved. Returns the conversation object."
+          }
+        },
+        {
+          "name": "2. Customer → Send message to Admin (Text)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Hello Admin, I need help with my order!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/chat/message/customer-to-admin", "host": ["{{baseUrl}}"], "path": ["chat", "message", "customer-to-admin"] },
+            "description": "Customer sends a text message to admin. receiverId is optional — admin is auto-resolved."
+          }
+        },
+        {
+          "name": "3. Customer → Send message to Admin (Text + Image)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "text", "value": "Here is a screenshot of my issue", "type": "text" },
+                { "key": "image", "src": "", "type": "file", "description": "Attach an image file" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/chat/message/customer-to-admin", "host": ["{{baseUrl}}"], "path": ["chat", "message", "customer-to-admin"] },
+            "description": "Customer sends a message with image attachment to admin."
+          }
+        },
+        {
+          "name": "4. Customer → Get My Conversations (Inbox)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/conversations?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "conversations"],
+              "query": [{ "key": "limit", "value": "20" }]
+            },
+            "description": "Customer gets all their conversations (with providers and admin)."
+          }
+        },
+        {
+          "name": "5. Customer → Get Messages in Conversation",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/conversations/{{conversationId}}/messages?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "conversations", "{{conversationId}}", "messages"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "description": "Customer fetches paginated messages from a conversation."
+          }
+        },
+        {
+          "name": "6. Customer → Mark Conversation as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/chat/conversations/{{conversationId}}/read", "host": ["{{baseUrl}}"], "path": ["chat", "conversations", "{{conversationId}}", "read"] },
+            "description": "Mark all messages in a conversation as read."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔑 ADMIN SIDE",
+      "item": [
+        {
+          "name": "1. Admin → Get All Customer Conversations",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/admin/customer-conversations?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "admin", "customer-conversations"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "description": "Admin gets all conversations with customers only (filtered inbox)."
+          }
+        },
+        {
+          "name": "2. Admin → List Customers for Chat",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/admin/customers?search=&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "admin", "customers"],
+              "query": [
+                { "key": "search", "value": "", "description": "Search by name or email" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "description": "Admin gets list of all customers. hasExistingConversation flag shows if a chat already exists."
+          }
+        },
+        {
+          "name": "3. Admin → Start Conversation with Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/chat/admin/start-conversation", "host": ["{{baseUrl}}"], "path": ["chat", "admin", "start-conversation"] },
+            "description": "Admin starts or opens an existing conversation with a specific customer."
+          }
+        },
+        {
+          "name": "4. Admin → Send Message to Customer (Text)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverId\": \"{{customerId}}\",\n  \"text\": \"Hello! How can I help you today?\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/chat/message/admin-to-customer", "host": ["{{baseUrl}}"], "path": ["chat", "message", "admin-to-customer"] },
+            "description": "Admin sends a text message to a customer. receiverId (customerId) is required."
+          }
+        },
+        {
+          "name": "5. Admin → Send Message to Customer (Text + Image)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "receiverId", "value": "{{customerId}}", "type": "text" },
+                { "key": "text", "value": "Please see the attached document", "type": "text" },
+                { "key": "image", "src": "", "type": "file", "description": "Attach an image file" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/chat/message/admin-to-customer", "host": ["{{baseUrl}}"], "path": ["chat", "message", "admin-to-customer"] },
+            "description": "Admin sends a message with image to a customer."
+          }
+        },
+        {
+          "name": "6. Admin → Get All Conversations (Full Inbox)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/conversations?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "conversations"],
+              "query": [{ "key": "limit", "value": "20" }]
+            },
+            "description": "Admin gets all conversations (both customer and provider conversations)."
+          }
+        },
+        {
+          "name": "7. Admin → Get Messages in Conversation",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/conversations/{{conversationId}}/messages?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "conversations", "{{conversationId}}", "messages"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "description": "Admin fetches paginated messages from a conversation."
+          }
+        },
+        {
+          "name": "8. Admin → Mark Conversation as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/chat/conversations/{{conversationId}}/read", "host": ["{{baseUrl}}"], "path": ["chat", "conversations", "{{conversationId}}", "read"] },
+            "description": "Admin marks all messages in a conversation as read."
+          }
+        },
+        {
+          "name": "9. Admin → Archive Conversation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ARCHIVED\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/chat/conversations/{{conversationId}}/archive", "host": ["{{baseUrl}}"], "path": ["chat", "conversations", "{{conversationId}}", "archive"] },
+            "description": "Admin archives a conversation. Send status: ACTIVE to unarchive."
+          }
+        }
+      ]
+    }
+  ]
+}
