@@ -5,6 +5,7 @@ export const analyticsQuerySchema = z.object({
         filter: z.enum(['today', 'week', 'month', 'year', 'custom']).default('today'),
         startDate: z.string().optional(),
         endDate: z.string().optional(),
+        providerId: z.string().optional(), // allow providerId from admin dashboard frontend
     }).refine(data => {
         if (data.filter === 'custom' && (!data.startDate || !data.endDate)) {
             return false;

@@ -25,15 +25,19 @@ class AdminDashboardService {
      * API 1: Orders & Analytics Overview
      * Fetch overall statistics for a specific restaurant/provider.
      */
-    async getAnalyticsOverview(providerId: string) {
-        if (!Types.ObjectId.isValid(providerId)) {
-            throw new AppError('Invalid Provider ID', 400);
-        }
+    async getAnalyticsOverview(providerId?: string) {
+        let matchStage: any = {};
 
-        const pId = new Types.ObjectId(providerId);
+        if (providerId && providerId !== '') {
+            if (!Types.ObjectId.isValid(providerId)) {
+                throw new AppError('Invalid Provider ID', 400);
+            }
+            matchStage = { providerId: new Types.ObjectId(providerId) };
+        }
+        // If no providerId, get global analytics (all providers)
 
         const stats = await Order.aggregate([
-            { $match: { providerId: pId } },
+            { $match: matchStage },
             {
                 $facet: {
                     orderCounts: [
@@ -93,15 +97,19 @@ class AdminDashboardService {
      * API 2: Customer Feedback
      * Get aggregated customer ratings for the restaurant/provider.
      */
-    async getCustomerFeedback(providerId: string) {
-        if (!Types.ObjectId.isValid(providerId)) {
-            throw new AppError('Invalid Provider ID', 400);
-        }
+    async getCustomerFeedback(providerId?: string) {
+        let matchStage: any = {};
 
-        const pId = new Types.ObjectId(providerId);
+        if (providerId && providerId !== '') {
+            if (!Types.ObjectId.isValid(providerId)) {
+                throw new AppError('Invalid Provider ID', 400);
+            }
+            matchStage = { providerId: new Types.ObjectId(providerId) };
+        }
+        // If no providerId, get global feedback (all providers)
 
         const feedback = await Review.aggregate([
-            { $match: { providerId: pId } },
+            { $match: matchStage },
             {
                 $group: {
                     _id: '$rating',

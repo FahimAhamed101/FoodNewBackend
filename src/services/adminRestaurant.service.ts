@@ -355,21 +355,20 @@ class AdminRestaurantService {
                 }
             },
             { $unwind: { path: '$listingStats', preserveNullAndEmptyArrays: true } },
-            // Lookup Payments for revenue (sum of totalAmount where status is completed)
+            // Lookup Orders for revenue (sum of totalPrice where status is completed/picked_up)
             {
                 $lookup: {
-                    from: 'payments',
+                    from: 'orders',
                     localField: 'providerId',
                     foreignField: 'providerId',
                     pipeline: [
-                        { $match: { status: 'completed' } },
-                        { $group: { _id: null, totalRevenue: { $sum: '$totalAmount' } } }
+                        { $match: { status: { $in: ['completed', 'picked_up'] } } },
+                        { $group: { _id: null, totalRevenue: { $sum: '$totalPrice' } } }
                     ],
                     as: 'paymentStats'
                 }
             },
             { $unwind: { path: '$paymentStats', preserveNullAndEmptyArrays: true } },
-            // Project fields
             {
                 $project: {
                     restaurantId: '$providerId',
@@ -475,15 +474,15 @@ class AdminRestaurantService {
                 }
             },
             { $unwind: { path: '$listingStats', preserveNullAndEmptyArrays: true } },
-            // Lookup Payments revenue
+            // Lookup Orders for revenue
             {
                 $lookup: {
-                    from: 'payments',
+                    from: 'orders',
                     localField: 'providerId',
                     foreignField: 'providerId',
                     pipeline: [
-                        { $match: { status: 'completed' } },
-                        { $group: { _id: null, totalRevenue: { $sum: '$totalAmount' } } }
+                        { $match: { status: { $in: ['completed', 'picked_up'] } } },
+                        { $group: { _id: null, totalRevenue: { $sum: '$totalPrice' } } }
                     ],
                     as: 'paymentStats'
                 }
@@ -571,15 +570,15 @@ class AdminRestaurantService {
                 }
             },
             { $unwind: { path: '$listingStats', preserveNullAndEmptyArrays: true } },
-            // Lookup Payments revenue
+            // Lookup Orders for revenue
             {
                 $lookup: {
-                    from: 'payments',
+                    from: 'orders',
                     localField: 'providerId',
                     foreignField: 'providerId',
                     pipeline: [
-                        { $match: { status: 'completed' } },
-                        { $group: { _id: null, totalRevenue: { $sum: '$totalAmount' } } }
+                        { $match: { status: { $in: ['completed', 'picked_up'] } } },
+                        { $group: { _id: null, totalRevenue: { $sum: '$totalPrice' } } }
                     ],
                     as: 'paymentStats'
                 }

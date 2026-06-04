@@ -8,11 +8,10 @@ class AdminDashboardController {
     getAnalytics = catchAsync(async (req: Request, res: Response) => {
         const { providerId } = req.query;
 
-        if (!providerId) {
-            throw new AppError('providerId query parameter is required', 400);
-        }
-
-        const data = await adminDashboardService.getAnalyticsOverview(providerId as string);
+        // If providerId is empty or not provided, return global analytics
+        const data = await adminDashboardService.getAnalyticsOverview(
+            providerId && providerId !== '' ? (providerId as string) : undefined
+        );
 
         res.status(200).json({
             success: true,
@@ -24,11 +23,10 @@ class AdminDashboardController {
     getFeedback = catchAsync(async (req: Request, res: Response) => {
         const { providerId } = req.query;
 
-        if (!providerId) {
-            throw new AppError('providerId query parameter is required', 400);
-        }
-
-        const data = await adminDashboardService.getCustomerFeedback(providerId as string);
+        // If providerId is empty or not provided, return global feedback
+        const data = await adminDashboardService.getCustomerFeedback(
+            providerId && providerId !== '' ? (providerId as string) : undefined
+        );
 
         res.status(200).json({
             success: true,
