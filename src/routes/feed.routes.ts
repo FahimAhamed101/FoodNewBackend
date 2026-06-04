@@ -18,6 +18,7 @@ const feedLimiter = rateLimit({
 
 router.use(feedLimiter);
 router.get('/home', validate(getFeedSchema), feedController.getHomeFeed);
+router.get('/free-meals', feedController.getFreeMealFeed);
 router.get('/', validate(getFeedSchema), feedController.getFeed);
 
 export default router;

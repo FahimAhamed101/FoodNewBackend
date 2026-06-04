@@ -14,6 +14,7 @@ router.get('/provider/:providerId', validate(getReviewsQuerySchema), reviewContr
 router.get('/stats', authenticate, requireRole(['PROVIDER']), reviewController.getRatingStats);
 router.get('/stats/:providerId', reviewController.getRatingStats);
 router.get('/all', authenticate, requireRole(['ADMIN']), validate(getReviewsQuerySchema), reviewController.getAllReviews);
+router.get('/', authenticate, requireRole(['ADMIN']), validate(getReviewsQuerySchema), reviewController.getAllReviews); // alias: /api/v1/admin/reviews?page=1&limit=5
 router.get('/food/:foodId', reviewController.getFoodReviews);
 router.use(authenticate);
 router.get('/:reviewId', reviewController.getReviewById);

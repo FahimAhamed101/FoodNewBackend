@@ -4,29 +4,15 @@ import { requireRole } from '../middlewares/requireRole';
 import { UserRole } from '../models/user.model';
 import adminDashboardController from '../controllers/adminDashboard.controller';
 import reviewController from '../controllers/review.controller';
+import adminAnalyticsController from '../controllers/adminAnalytics.controller';
 
 const router = Router();
 
 // Secure all routes with JWT and Admin Role
 router.use(authenticate);
 router.use(requireRole([UserRole.ADMIN]));
-
-/**
- * 1️⃣ API 1: Orders & Analytics Overview
- * GET /api/admin/analytics
- */
 router.get('/analytics', adminDashboardController.getAnalytics);
-
-/**
- * 2️⃣ API 2: Customer Feedback
- * GET /api/admin/feedback
- */
 router.get('/feedback', adminDashboardController.getFeedback);
-
-/**
- * 3️⃣ API 3: Top Performing Restaurants
- * GET /api/admin/top-restaurants
- */
 router.get('/top-restaurants', adminDashboardController.getTopRestaurants);
 
 /**
@@ -40,5 +26,12 @@ router.get('/detailed-stats', adminDashboardController.getDetailedStats);
  * GET /api/v1/admin/reviews
  */
 router.get('/reviews', reviewController.getAllReviews);
+
+/**
+ * 6️⃣ API 6: Trending Menu Items
+ * GET /api/v1/admin/dashboard/trending-menu
+ * Alias for /api/v1/admin/analytics/trending-menus
+ */
+router.get('/trending-menu', adminAnalyticsController.getTrendingMenus);
 
 export default router;
