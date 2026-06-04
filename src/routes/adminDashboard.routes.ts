@@ -11,8 +11,23 @@ const router = Router();
 // Secure all routes with JWT and Admin Role
 router.use(authenticate);
 router.use(requireRole([UserRole.ADMIN]));
+
+/**
+ * 1️⃣ API 1: Orders & Analytics Overview
+ * GET /api/admin/analytics
+ */
 router.get('/analytics', adminDashboardController.getAnalytics);
+
+/**
+ * 2️⃣ API 2: Customer Feedback
+ * GET /api/admin/feedback
+ */
 router.get('/feedback', adminDashboardController.getFeedback);
+
+/**
+ * 3️⃣ API 3: Top Performing Restaurants
+ * GET /api/admin/top-restaurants
+ */
 router.get('/top-restaurants', adminDashboardController.getTopRestaurants);
 
 /**

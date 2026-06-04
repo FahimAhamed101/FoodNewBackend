@@ -1,7 +1,6 @@
 import { Food } from '../models/food.model';
 import { Category } from '../models/category.model';
 import { ProviderProfile } from '../models/providerProfile.model';
-import { MealToken, MealTokenStatus } from '../models/mealToken.model';
 import { Types } from 'mongoose';
 import { toPublicMediaUrl } from '../utils/mediaUrl';
 
@@ -242,56 +241,6 @@ class FeedService {
         const categories = await Category.find().distinct('categoryName');
         return {
             featuredCategories: categories
-        };
-    }
-
-    /**
-     * "Free Meal Near You" feed
-     * Returns same food structure as getFeed but only from providers
-     * that have available meal tokens. Includes token info.
-     */
-    async getFreeMealFeed(filters: any, baseUrl = '') {
-        const page = Number(filters?.page || 1);
-        const limit = Number(filters?.limit || 20);
-
-        // Count available tokens
-        const availableCount = await MealToken.countDocuments({
-            status: MealTokenStatus.AVAILABLE,
-        });
-
-        if (availableCount === 0) {
-            return {
-                foods: [],
-                total: 0,
-                page,
-                limit,
-                availableTokenCount: 0,
-                hasFreeMeals: false,
-            };
-        }
-
-        // Get all available foods (same as normal feed)
-        const feedResult = await this.getFeed(
-            { ...filters, page, limit },
-            baseUrl
-        );
-
-        // Tag each food item with free meal info
-        const taggedFoods = feedResult.foods.map((food: any) => ({
-            ...food,
-            isFreeAvailable: true,
-            freeTokenCount: availableCount,
-            originalPrice: food.finalPriceTag,
-            displayPrice: 0, // free
-        }));
-
-        return {
-            foods: taggedFoods,
-            total: feedResult.total,
-            page,
-            limit,
-            availableTokenCount: availableCount,
-            hasFreeMeals: true,
         };
     }
 }

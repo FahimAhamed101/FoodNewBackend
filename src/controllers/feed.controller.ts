@@ -36,27 +36,6 @@ class FeedController {
             }
         });
     });
-
-    /**
-     * GET /api/v1/feed/free-meals
-     * "Free Meal Near You" tab — same structure as normal feed
-     * but tagged with free meal availability
-     */
-    getFreeMealFeed = catchAsync(async (req: Request, res: Response) => {
-        const result = await feedService.getFreeMealFeed(req.query, getRequestBaseUrl(req));
-
-        res.status(200).json({
-            success: true,
-            meta: {
-                total: result.total,
-                page: result.page,
-                limit: result.limit,
-                availableTokenCount: result.availableTokenCount,
-                hasFreeMeals: result.hasFreeMeals,
-            },
-            data: result.foods,
-        });
-    });
 }
 
 export default new FeedController();

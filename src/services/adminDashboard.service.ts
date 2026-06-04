@@ -23,12 +23,12 @@ interface StateAnalysisResult {
 class AdminDashboardService {
     /**
      * API 1: Orders & Analytics Overview
-     * Fetch overall statistics for a specific restaurant/provider.
+     * Fetch overall statistics for a specific restaurant/provider or global if no providerId.
      */
     async getAnalyticsOverview(providerId?: string) {
         let matchStage: any = {};
 
-        if (providerId && providerId !== '') {
+        if (providerId) {
             if (!Types.ObjectId.isValid(providerId)) {
                 throw new AppError('Invalid Provider ID', 400);
             }
@@ -95,12 +95,12 @@ class AdminDashboardService {
 
     /**
      * API 2: Customer Feedback
-     * Get aggregated customer ratings for the restaurant/provider.
+     * Get aggregated customer ratings for the restaurant/provider or global if no providerId.
      */
     async getCustomerFeedback(providerId?: string) {
         let matchStage: any = {};
 
-        if (providerId && providerId !== '') {
+        if (providerId) {
             if (!Types.ObjectId.isValid(providerId)) {
                 throw new AppError('Invalid Provider ID', 400);
             }

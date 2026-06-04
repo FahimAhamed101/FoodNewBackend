@@ -13,7 +13,7 @@ process.on('uncaughtException', (err: Error) => {
 
 connectDB();
 
-const server = app.listen(config.port, async () => {
+const server = app.listen(5000, async () => {
     console.log(`App running on port ${config.port}...`);
     initJobs();
     socketService.init(server);
