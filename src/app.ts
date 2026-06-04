@@ -40,7 +40,6 @@ import supportTicketRoutes from './routes/supportTicket.routes';
 import complianceRoutes from './routes/compliance.routes';
 import systemConfigRoutes from './routes/systemConfig.routes';
 import adminNotificationRoutes from './routes/adminNotification.routes';
-import adminMealTokenRoutes from './routes/adminMealToken.routes';
 import uploadRoutes from './services/cloudinary.service';
 import globalErrorHandler from './middlewares/errorMiddleware';
 import AppError from './utils/AppError';
@@ -73,8 +72,7 @@ app.use('/api/v1/media', uploadRoutes);
 app.use('/api/v1/states', stateRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/payment-methods', paymentMethodRoutes);
-app.use('/api/auth', oauthRoutes); // Google OAuth routes (legacy)
-app.use('/api/v1/oauth', oauthRoutes); // Google OAuth routes (new standard)
+app.use('/api/auth', oauthRoutes); // Google OAuth routes
 app.use('/api/v1', providerOnboardingRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/foods', foodRoutes);
@@ -82,12 +80,10 @@ app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/provider', providerRoutes);
 app.use('/api/v1/chat', chatRoutes);
 app.use('/api/v1/reviews', reviewRoutes);
-app.use('/api/v1/admin/reviews', reviewRoutes); // Alias for admin dashboard
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/feed', feedRoutes);
 app.use('/api/v1/top-rated', topRatedRoutes);
-app.use('/api/v1/admin/top', topRatedRoutes); // Alias for admin dashboard
 app.use('/api/v1/location', locationRoutes);
 app.use('/api/v1/profile', profileRoutes);
 app.use('/api/v1/customer/orders', customerOrderRoutes);
@@ -99,25 +95,21 @@ app.use('/api/v1/banners', bannerRoutes);
 app.use('/api/v1/admin/banners', bannerRoutes);
 app.use('/api/v1/admin/analytics', adminAnalyticsRoutes);
 app.use('/api/v1/admin/dashboard', adminAnalyticsRoutes);
+app.use('/api/v1/admin', adminRestaurantRoutes);
 app.use('/api/v1/admin/customers', adminCustomerRoutes);
 app.use('/api/v1/admin/transactions-orders', adminTransactionRoutes);
-app.use('/api/v1/admin/transactions', adminTransactionRoutes); // Alias
 app.use('/api/v1/admin/orders', adminOrderRoutes);
 app.use('/api/v1/admin/users', adminUserRoutes);
 app.use('/api/v1/admin/payment-methods', adminPaymentMethodRoutes);
+app.use('/api/v1/admin', adminDashboardRoutes);
 app.use('/api/v1/admin/tax', adminTaxRoutes);
 app.use('/api/v1/admin/legal', adminLegalDocumentRoutes);
-// Broad /api/v1/admin routes MUST come LAST to avoid intercepting specific routes above
-app.use('/api/v1/admin', adminAnalyticsRoutes); // covers /top-restaurants, /trending-menus, /recent-orders etc.
-app.use('/api/v1/admin', adminDashboardRoutes); // covers /feedback, /detailed-stats, /analytics, /reviews
-app.use('/api/v1/admin', adminRestaurantRoutes); // covers /restaurants/:id, /dashboard/stats/:id etc.
 app.use('/api/v1/support', supportTicketRoutes);
 app.use('/api/v1/compliance', complianceRoutes);
 app.use('/api/v1/activities', activityRoutes);
 app.use('/api/v1/config', systemConfigRoutes);
 app.use('/api/v1/admin/config', systemConfigRoutes);
 app.use('/api/v1/admin/notifications', adminNotificationRoutes);
-app.use('/api/v1/admin/donation', adminMealTokenRoutes);
 
 
 app.get('/', (req: Request, res: Response) => {

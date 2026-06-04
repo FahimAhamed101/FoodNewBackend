@@ -4,7 +4,6 @@ import { requireRole } from '../middlewares/requireRole';
 import { UserRole } from '../models/user.model';
 import adminDashboardController from '../controllers/adminDashboard.controller';
 import reviewController from '../controllers/review.controller';
-import adminAnalyticsController from '../controllers/adminAnalytics.controller';
 
 const router = Router();
 
@@ -41,12 +40,5 @@ router.get('/detailed-stats', adminDashboardController.getDetailedStats);
  * GET /api/v1/admin/reviews
  */
 router.get('/reviews', reviewController.getAllReviews);
-
-/**
- * 6️⃣ API 6: Trending Menu Items
- * GET /api/v1/admin/dashboard/trending-menu
- * Alias for /api/v1/admin/analytics/trending-menus
- */
-router.get('/trending-menu', adminAnalyticsController.getTrendingMenus);
 
 export default router;
