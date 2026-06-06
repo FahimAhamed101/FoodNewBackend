@@ -14,23 +14,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const catchAsync_1 = require("../utils/catchAsync");
 const adminDashboard_service_1 = __importDefault(require("../services/adminDashboard.service"));
-const AppError_1 = __importDefault(require("../utils/AppError"));
 class AdminDashboardController {
     constructor() {
         this.getAnalytics = (0, catchAsync_1.catchAsync)((req, res) => __awaiter(this, void 0, void 0, function* () {
             const { providerId } = req.query;
-            if (!providerId) {
-                throw new AppError_1.default('providerId query parameter is required', 400);
-            }
-            const data = yield adminDashboard_service_1.default.getAnalyticsOverview(providerId);
+            // If providerId is empty or not provided, return global analytics
+            const data = yield adminDashboard_service_1.default.getAnalyticsOverview(providerId && providerId !== '' ? providerId : undefined);
             res.status(200).json(Object.assign({ success: true }, data));
         }));
         this.getFeedback = (0, catchAsync_1.catchAsync)((req, res) => __awaiter(this, void 0, void 0, function* () {
             const { providerId } = req.query;
-            if (!providerId) {
-                throw new AppError_1.default('providerId query parameter is required', 400);
-            }
-            const data = yield adminDashboard_service_1.default.getCustomerFeedback(providerId);
+            // If providerId is empty or not provided, return global feedback
+            const data = yield adminDashboard_service_1.default.getCustomerFeedback(providerId && providerId !== '' ? providerId : undefined);
             res.status(200).json(Object.assign({ success: true }, data));
         }));
         this.getTopRestaurants = (0, catchAsync_1.catchAsync)((req, res) => __awaiter(this, void 0, void 0, function* () {

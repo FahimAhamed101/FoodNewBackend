@@ -50,6 +50,26 @@ class SocketService {
         console.log('Socket.IO initialized with Notifications');
     }
 
+    public emitNotificationToUser(
+        recipientId: string,
+        payload: {
+            notificationId?: string;
+            type?: string;
+            title: string;
+            message: string;
+            orderId?: string;
+            orderStatus?: string;
+            createdAt?: Date | string;
+            metadata?: any;
+        }
+    ) {
+        if (!this.io || !recipientId) {
+            return;
+        }
+
+        this.io.to(recipientId).emit('notification', payload);
+    }
+
     private handleConnection(socket: Socket) {
         const { userId, role } = socket.user!;
 

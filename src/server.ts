@@ -2,6 +2,7 @@ import app from './app';
 import config from './config';
 import connectDB from './database/db';
 import { initJobs } from './jobs/cleanup.job';
+import notificationService from './services/notification.service';
 import { socketService } from './services/socket.service';
 
 process.on('uncaughtException', (err: Error) => {
@@ -21,6 +22,7 @@ const server = app.listen(config.port, async () => {
     // Cleanup any obsolete database indexes
     const reviewService = (await import('./services/review.service')).default;
     await reviewService.cleanupObsoleteIndexes();
+    await notificationService.cleanupObsoleteIndexes();
 });
 
 // Handle unhandled promise rejections

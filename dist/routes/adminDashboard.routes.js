@@ -9,24 +9,13 @@ const requireRole_1 = require("../middlewares/requireRole");
 const user_model_1 = require("../models/user.model");
 const adminDashboard_controller_1 = __importDefault(require("../controllers/adminDashboard.controller"));
 const review_controller_1 = __importDefault(require("../controllers/review.controller"));
+const adminAnalytics_controller_1 = __importDefault(require("../controllers/adminAnalytics.controller"));
 const router = (0, express_1.Router)();
 // Secure all routes with JWT and Admin Role
 router.use(authenticate_1.authenticate);
 router.use((0, requireRole_1.requireRole)([user_model_1.UserRole.ADMIN]));
-/**
- * 1️⃣ API 1: Orders & Analytics Overview
- * GET /api/admin/analytics
- */
 router.get('/analytics', adminDashboard_controller_1.default.getAnalytics);
-/**
- * 2️⃣ API 2: Customer Feedback
- * GET /api/admin/feedback
- */
 router.get('/feedback', adminDashboard_controller_1.default.getFeedback);
-/**
- * 3️⃣ API 3: Top Performing Restaurants
- * GET /api/admin/top-restaurants
- */
 router.get('/top-restaurants', adminDashboard_controller_1.default.getTopRestaurants);
 /**
  * 4️⃣ API 4: Dashboard Detailed Stats (for charts)
@@ -38,4 +27,10 @@ router.get('/detailed-stats', adminDashboard_controller_1.default.getDetailedSta
  * GET /api/v1/admin/reviews
  */
 router.get('/reviews', review_controller_1.default.getAllReviews);
+/**
+ * 6️⃣ API 6: Trending Menu Items
+ * GET /api/v1/admin/dashboard/trending-menu
+ * Alias for /api/v1/admin/analytics/trending-menus
+ */
+router.get('/trending-menu', adminAnalytics_controller_1.default.getTrendingMenus);
 exports.default = router;

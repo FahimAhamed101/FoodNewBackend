@@ -104,7 +104,7 @@ class MealTokenController {
 
     /**
      * GET /api/v1/donation/daily-quota
-     * User sees their remaining daily free meal quota
+     * Legacy route name. Returns free meal cooldown state.
      */
     getDailyQuota = catchAsync(async (req: AuthRequest, res: Response) => {
         const userId = req.user!.userId;
@@ -118,7 +118,7 @@ class MealTokenController {
 
     /**
      * POST /api/v1/donation/claim/:tokenId
-     * User claims a free meal token
+     * User claims a free meal token. One claim every 48 hours.
      */
     claimFreeMeal = catchAsync(async (req: AuthRequest, res: Response) => {
         const claimerUserId = req.user!.userId;
@@ -128,14 +128,18 @@ class MealTokenController {
             throw new AppError('tokenId is required', 400, 'INVALID_INPUT');
         }
 
-        const token = await mealTokenService.claimFreeMeal(claimerUserId, tokenId);
+        const result = await mealTokenService.claimFreeMeal(claimerUserId, tokenId);
 
         res.status(200).json({
             success: true,
-            message: 'Free meal claimed successfully! Place your order now.',
+            message: result.reusedExistingClaim
+                ? 'You already have a claimed free meal token. Use it to place your order.'
+                : 'Free meal claimed successfully! Place your order now.',
             data: {
-                token,
-                note: 'You can now place a free order. Daily limit: 2 free meals.',
+                token: result.token,
+                reusedExistingClaim: result.reusedExistingClaim,
+                cooldownEndsAt: result.cooldownEndsAt,
+                note: 'You can claim one free donated meal every 48 hours.',
             },
         });
     });

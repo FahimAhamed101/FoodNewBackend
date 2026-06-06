@@ -7,6 +7,7 @@ exports.analyticsQuerySchema = zod_1.z.object({
         filter: zod_1.z.enum(['today', 'week', 'month', 'year', 'custom']).default('today'),
         startDate: zod_1.z.string().optional(),
         endDate: zod_1.z.string().optional(),
+        providerId: zod_1.z.string().optional(), // allow providerId from admin dashboard frontend
     }).refine(data => {
         if (data.filter === 'custom' && (!data.startDate || !data.endDate)) {
             return false;

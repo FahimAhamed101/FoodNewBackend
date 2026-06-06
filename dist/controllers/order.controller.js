@@ -66,6 +66,24 @@ class OrderController {
                 data: order,
             });
         }));
+        this.notifyReadyForPickup = (0, catchAsync_1.catchAsync)((req, res) => __awaiter(this, void 0, void 0, function* () {
+            const providerId = req.user.userId;
+            const { orderId } = req.params;
+            yield order_service_1.default.sendProviderNotification(orderId, providerId, order_model_1.OrderStatus.READY_FOR_PICKUP);
+            res.status(200).json({
+                success: true,
+                message: 'Pickup notification sent',
+            });
+        }));
+        this.notifyCompleted = (0, catchAsync_1.catchAsync)((req, res) => __awaiter(this, void 0, void 0, function* () {
+            const providerId = req.user.userId;
+            const { orderId } = req.params;
+            yield order_service_1.default.sendProviderNotification(orderId, providerId, order_model_1.OrderStatus.COMPLETED);
+            res.status(200).json({
+                success: true,
+                message: 'Completed notification sent',
+            });
+        }));
         this.cancelOrder = (0, catchAsync_1.catchAsync)((req, res) => __awaiter(this, void 0, void 0, function* () {
             const userId = req.user.userId;
             const role = req.user.role; // Assumes role is populated in req.user

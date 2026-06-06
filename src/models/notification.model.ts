@@ -76,7 +76,6 @@ const notificationSchema = new Schema<INotification>(
 
 // Indexes
 notificationSchema.index({ userId: 1, createdAt: -1 });
-// Sparse index for order uniqueness only if orderId exists
-notificationSchema.index({ userId: 1, orderId: 1, orderStatus: 1 }, { unique: true, sparse: true });
+notificationSchema.index({ userId: 1, orderId: 1, orderStatus: 1 }, { sparse: true });
 
 export const Notification = model<INotification>('Notification', notificationSchema);

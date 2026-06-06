@@ -38,4 +38,6 @@ router.patch('/:orderId/accept', order_controller_1.default.acceptOrder);
 router.patch('/:orderId/ready', order_controller_1.default.markReady);
 router.patch('/:orderId/pickup', order_controller_1.default.markPickedUp);
 router.patch('/:orderId/complete', order_controller_1.default.markCompleted);
+router.patch('/:orderId/notify-pickup', order_controller_1.default.notifyReadyForPickup);
+router.patch('/:orderId/notify-complete', order_controller_1.default.notifyCompleted);
 exports.default = router;

@@ -49,6 +49,7 @@ const app_1 = __importDefault(require("./app"));
 const config_1 = __importDefault(require("./config"));
 const db_1 = __importDefault(require("./database/db"));
 const cleanup_job_1 = require("./jobs/cleanup.job");
+const notification_service_1 = __importDefault(require("./services/notification.service"));
 const socket_service_1 = require("./services/socket.service");
 process.on('uncaughtException', (err) => {
     console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
@@ -64,6 +65,7 @@ const server = app_1.default.listen(config_1.default.port, () => __awaiter(void 
     // Cleanup any obsolete database indexes
     const reviewService = (yield Promise.resolve().then(() => __importStar(require('./services/review.service')))).default;
     yield reviewService.cleanupObsoleteIndexes();
+    yield notification_service_1.default.cleanupObsoleteIndexes();
 }));
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {

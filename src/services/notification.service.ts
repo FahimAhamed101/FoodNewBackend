@@ -3,8 +3,22 @@ import { UserRole } from '../models/user.model';
 import { OrderStatus } from '../models/order.model';
 import AppError from '../utils/AppError';
 import { Types } from 'mongoose';
+import { socketService } from './socket.service';
 
 class NotificationService {
+    async cleanupObsoleteIndexes() {
+        try {
+            await Notification.collection.dropIndex('userId_1_orderId_1_orderStatus_1');
+        } catch (error: any) {
+            if (
+                error?.codeName === 'IndexNotFound' ||
+                error?.message?.includes('index not found')
+            ) {
+                return;
+            }
+            throw error;
+        }
+    }
 
     async createNotification(
         userId: Types.ObjectId,
@@ -15,16 +29,78 @@ class NotificationService {
         message: string
     ) {
         try {
-            return await Notification.create({
+            const notification = await Notification.create({
                 userId,
+                type: NotificationType.ORDER,
                 userRole,
                 orderId,
                 orderStatus,
                 title,
                 message,
+                metadata: {
+                    orderStatus,
+                },
             });
+
+            socketService.emitNotificationToUser(userId.toString(), {
+                notificationId: notification._id?.toString?.(),
+                type: NotificationType.ORDER,
+                title: notification.title,
+                message: notification.message,
+                orderId: orderId.toString(),
+                orderStatus,
+                createdAt: notification.createdAt,
+                metadata: notification.metadata,
+            });
+
+            return notification;
         } catch (error: any) {
 
+            if (error.code === 11000) {
+                return null;
+            }
+            throw error;
+        }
+    }
+
+    async createManualOrderNotification(
+        userId: Types.ObjectId,
+        userRole: UserRole,
+        orderId: Types.ObjectId,
+        orderStatus: OrderStatus,
+        title: string,
+        message: string,
+        metadata?: Record<string, any>
+    ) {
+        try {
+            const notification = await Notification.create({
+                userId,
+                type: NotificationType.ORDER,
+                userRole,
+                orderId,
+                orderStatus,
+                title,
+                message,
+                metadata: {
+                    source: 'provider_manual',
+                    orderStatus,
+                    ...metadata,
+                },
+            });
+
+            socketService.emitNotificationToUser(userId.toString(), {
+                notificationId: notification._id?.toString?.(),
+                type: NotificationType.ORDER,
+                title: notification.title,
+                message: notification.message,
+                orderId: orderId.toString(),
+                orderStatus,
+                createdAt: notification.createdAt,
+                metadata: notification.metadata,
+            });
+
+            return notification;
+        } catch (error: any) {
             if (error.code === 11000) {
                 return null;
             }
@@ -42,12 +118,15 @@ class NotificationService {
         const formattedNotifications = notifications.map((n) => ({
             notificationId: n._id,
             userId: n.userId,
+            type: n.type || NotificationType.ORDER,
             userRole: n.userRole,
             orderId: n.orderId,
+            orderStatus: n.orderStatus || n.metadata?.orderStatus,
             title: n.title,
             message: n.message,
             status: n.createdAt > twentyFourHoursAgo ? 'NEW' : 'OLD',
             isRead: n.isRead,
+            metadata: n.metadata,
             createdAt: n.createdAt,
         }));
 

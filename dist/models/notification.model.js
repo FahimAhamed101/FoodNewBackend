@@ -58,6 +58,5 @@ const notificationSchema = new mongoose_1.Schema({
 });
 // Indexes
 notificationSchema.index({ userId: 1, createdAt: -1 });
-// Sparse index for order uniqueness only if orderId exists
-notificationSchema.index({ userId: 1, orderId: 1, orderStatus: 1 }, { unique: true, sparse: true });
+notificationSchema.index({ userId: 1, orderId: 1, orderStatus: 1 }, { sparse: true });
 exports.Notification = (0, mongoose_1.model)('Notification', notificationSchema);

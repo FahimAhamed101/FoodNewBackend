@@ -16,6 +16,7 @@ router.get('/provider/:providerId', (0, validate_1.validate)(review_validation_1
 router.get('/stats', authenticate_1.authenticate, (0, requireRole_1.requireRole)(['PROVIDER']), review_controller_1.default.getRatingStats);
 router.get('/stats/:providerId', review_controller_1.default.getRatingStats);
 router.get('/all', authenticate_1.authenticate, (0, requireRole_1.requireRole)(['ADMIN']), (0, validate_1.validate)(review_validation_1.getReviewsQuerySchema), review_controller_1.default.getAllReviews);
+router.get('/', authenticate_1.authenticate, (0, requireRole_1.requireRole)(['ADMIN']), (0, validate_1.validate)(review_validation_1.getReviewsQuerySchema), review_controller_1.default.getAllReviews); // alias: /api/v1/admin/reviews?page=1&limit=5
 router.get('/food/:foodId', review_controller_1.default.getFoodReviews);
 router.use(authenticate_1.authenticate);
 router.get('/:reviewId', review_controller_1.default.getReviewById);

@@ -38,5 +38,7 @@ router.patch('/:orderId/accept', orderController.acceptOrder);
 router.patch('/:orderId/ready', orderController.markReady);
 router.patch('/:orderId/pickup', orderController.markPickedUp);
 router.patch('/:orderId/complete', orderController.markCompleted);
+router.patch('/:orderId/notify-pickup', orderController.notifyReadyForPickup);
+router.patch('/:orderId/notify-complete', orderController.notifyCompleted);
 
 export default router;

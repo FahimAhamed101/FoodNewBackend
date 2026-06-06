@@ -50,18 +50,84 @@ const user_model_1 = require("../models/user.model");
 const order_model_1 = require("../models/order.model");
 const AppError_1 = __importDefault(require("../utils/AppError"));
 const mongoose_1 = require("mongoose");
+const socket_service_1 = require("./socket.service");
 class NotificationService {
+    cleanupObsoleteIndexes() {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                yield notification_model_1.Notification.collection.dropIndex('userId_1_orderId_1_orderStatus_1');
+            }
+            catch (error) {
+                if ((error === null || error === void 0 ? void 0 : error.codeName) === 'IndexNotFound' ||
+                    ((_a = error === null || error === void 0 ? void 0 : error.message) === null || _a === void 0 ? void 0 : _a.includes('index not found'))) {
+                    return;
+                }
+                throw error;
+            }
+        });
+    }
     createNotification(userId, userRole, orderId, orderStatus, title, message) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b;
             try {
-                return yield notification_model_1.Notification.create({
+                const notification = yield notification_model_1.Notification.create({
                     userId,
+                    type: notification_model_1.NotificationType.ORDER,
                     userRole,
                     orderId,
                     orderStatus,
                     title,
                     message,
+                    metadata: {
+                        orderStatus,
+                    },
                 });
+                socket_service_1.socketService.emitNotificationToUser(userId.toString(), {
+                    notificationId: (_b = (_a = notification._id) === null || _a === void 0 ? void 0 : _a.toString) === null || _b === void 0 ? void 0 : _b.call(_a),
+                    type: notification_model_1.NotificationType.ORDER,
+                    title: notification.title,
+                    message: notification.message,
+                    orderId: orderId.toString(),
+                    orderStatus,
+                    createdAt: notification.createdAt,
+                    metadata: notification.metadata,
+                });
+                return notification;
+            }
+            catch (error) {
+                if (error.code === 11000) {
+                    return null;
+                }
+                throw error;
+            }
+        });
+    }
+    createManualOrderNotification(userId, userRole, orderId, orderStatus, title, message, metadata) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b;
+            try {
+                const notification = yield notification_model_1.Notification.create({
+                    userId,
+                    type: notification_model_1.NotificationType.ORDER,
+                    userRole,
+                    orderId,
+                    orderStatus,
+                    title,
+                    message,
+                    metadata: Object.assign({ source: 'provider_manual', orderStatus }, metadata),
+                });
+                socket_service_1.socketService.emitNotificationToUser(userId.toString(), {
+                    notificationId: (_b = (_a = notification._id) === null || _a === void 0 ? void 0 : _a.toString) === null || _b === void 0 ? void 0 : _b.call(_a),
+                    type: notification_model_1.NotificationType.ORDER,
+                    title: notification.title,
+                    message: notification.message,
+                    orderId: orderId.toString(),
+                    orderStatus,
+                    createdAt: notification.createdAt,
+                    metadata: notification.metadata,
+                });
+                return notification;
             }
             catch (error) {
                 if (error.code === 11000) {
@@ -77,17 +143,23 @@ class NotificationService {
             const notifications = yield notification_model_1.Notification.find({ userId: new mongoose_1.Types.ObjectId(userId) })
                 .sort({ createdAt: -1 })
                 .lean();
-            const formattedNotifications = notifications.map((n) => ({
-                notificationId: n._id,
-                userId: n.userId,
-                userRole: n.userRole,
-                orderId: n.orderId,
-                title: n.title,
-                message: n.message,
-                status: n.createdAt > twentyFourHoursAgo ? 'NEW' : 'OLD',
-                isRead: n.isRead,
-                createdAt: n.createdAt,
-            }));
+            const formattedNotifications = notifications.map((n) => {
+                var _a;
+                return ({
+                    notificationId: n._id,
+                    userId: n.userId,
+                    type: n.type || notification_model_1.NotificationType.ORDER,
+                    userRole: n.userRole,
+                    orderId: n.orderId,
+                    orderStatus: n.orderStatus || ((_a = n.metadata) === null || _a === void 0 ? void 0 : _a.orderStatus),
+                    title: n.title,
+                    message: n.message,
+                    status: n.createdAt > twentyFourHoursAgo ? 'NEW' : 'OLD',
+                    isRead: n.isRead,
+                    metadata: n.metadata,
+                    createdAt: n.createdAt,
+                });
+            });
             const newNotifications = formattedNotifications.filter((n) => n.status === 'NEW');
             const oldNotifications = formattedNotifications.filter((n) => n.status === 'OLD');
             return {

@@ -24,12 +24,16 @@ class AdminDashboardService {
     getAnalyticsOverview(providerId) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
-            if (!mongoose_1.Types.ObjectId.isValid(providerId)) {
-                throw new AppError_1.default('Invalid Provider ID', 400);
+            let matchStage = {};
+            if (providerId && providerId !== '') {
+                if (!mongoose_1.Types.ObjectId.isValid(providerId)) {
+                    throw new AppError_1.default('Invalid Provider ID', 400);
+                }
+                matchStage = { providerId: new mongoose_1.Types.ObjectId(providerId) };
             }
-            const pId = new mongoose_1.Types.ObjectId(providerId);
+            // If no providerId, get global analytics (all providers)
             const stats = yield order_model_1.Order.aggregate([
-                { $match: { providerId: pId } },
+                { $match: matchStage },
                 {
                     $facet: {
                         orderCounts: [
@@ -87,12 +91,16 @@ class AdminDashboardService {
      */
     getCustomerFeedback(providerId) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!mongoose_1.Types.ObjectId.isValid(providerId)) {
-                throw new AppError_1.default('Invalid Provider ID', 400);
+            let matchStage = {};
+            if (providerId && providerId !== '') {
+                if (!mongoose_1.Types.ObjectId.isValid(providerId)) {
+                    throw new AppError_1.default('Invalid Provider ID', 400);
+                }
+                matchStage = { providerId: new mongoose_1.Types.ObjectId(providerId) };
             }
-            const pId = new mongoose_1.Types.ObjectId(providerId);
+            // If no providerId, get global feedback (all providers)
             const feedback = yield review_model_1.Review.aggregate([
-                { $match: { providerId: pId } },
+                { $match: matchStage },
                 {
                     $group: {
                         _id: '$rating',

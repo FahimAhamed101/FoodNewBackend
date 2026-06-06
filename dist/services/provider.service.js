@@ -508,6 +508,7 @@ class ProviderService {
                     (customer === null || customer === void 0 ? void 0 : customer.googlePicture) ||
                     (customerId ? customerAvatarMap.get(customerId) : '') ||
                     '';
+                const displayTotalAmount = order.totalPrice > 0 ? order.totalPrice : order.subtotal;
                 return {
                     orderId: order.orderId,
                     status: order.status,
@@ -529,8 +530,14 @@ class ProviderService {
                             price: item.price
                         });
                     }),
+                    subtotal: order.subtotal,
+                    platformFee: order.platformFee,
+                    stateTax: order.stateTax,
                     donationAmount: order.donationAmount || 0,
-                    totalAmount: order.totalPrice,
+                    totalAmount: displayTotalAmount,
+                    actualTotalAmount: order.totalPrice,
+                    vendorAmount: order.vendorAmount || 0,
+                    paymentStatus: order.paymentStatus,
                     paymentMethod: order.paymentMethod,
                     pickupTime: order.pickupTime
                 };
@@ -576,6 +583,7 @@ class ProviderService {
                     (customer === null || customer === void 0 ? void 0 : customer.googlePicture) ||
                     (customerId ? customerAvatarMap.get(customerId) : '') ||
                     '';
+                const displayTotalAmount = order.totalPrice > 0 ? order.totalPrice : order.subtotal;
                 return {
                     orderId: order.orderId,
                     status: order.status,
@@ -597,8 +605,14 @@ class ProviderService {
                             price: item.price
                         });
                     }),
+                    subtotal: order.subtotal,
+                    platformFee: order.platformFee,
+                    stateTax: order.stateTax,
                     donationAmount: order.donationAmount || 0,
-                    totalAmount: order.totalPrice,
+                    totalAmount: displayTotalAmount,
+                    actualTotalAmount: order.totalPrice,
+                    vendorAmount: order.vendorAmount || 0,
+                    paymentStatus: order.paymentStatus,
                     paymentMethod: order.paymentMethod,
                     pickupTime: order.pickupTime
                 };

@@ -64,6 +64,28 @@ class OrderController {
         });
     });
 
+    notifyReadyForPickup = catchAsync(async (req: AuthRequest, res: Response) => {
+        const providerId = req.user!.userId;
+        const { orderId } = req.params;
+        await orderService.sendProviderNotification(orderId as string, providerId, OrderStatus.READY_FOR_PICKUP);
+
+        res.status(200).json({
+            success: true,
+            message: 'Pickup notification sent',
+        });
+    });
+
+    notifyCompleted = catchAsync(async (req: AuthRequest, res: Response) => {
+        const providerId = req.user!.userId;
+        const { orderId } = req.params;
+        await orderService.sendProviderNotification(orderId as string, providerId, OrderStatus.COMPLETED);
+
+        res.status(200).json({
+            success: true,
+            message: 'Completed notification sent',
+        });
+    });
+
     cancelOrder = catchAsync(async (req: AuthRequest, res: Response) => {
         const userId = req.user!.userId;
         const role = req.user!.role; // Assumes role is populated in req.user

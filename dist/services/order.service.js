@@ -179,6 +179,27 @@ class OrderService {
             return order;
         });
     }
+    sendProviderNotification(orderId, providerId, notificationStatus) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const order = yield order_model_1.Order.findOne({
+                $or: [
+                    { orderId },
+                    { _id: mongoose_1.Types.ObjectId.isValid(orderId) ? new mongoose_1.Types.ObjectId(orderId) : undefined }
+                ].filter(q => q._id !== undefined || q.orderId)
+            });
+            if (!order) {
+                throw new AppError_1.default('Order not found', 404, 'NOT_FOUND_ERROR');
+            }
+            if (order.providerId.toString() !== providerId) {
+                throw new AppError_1.default('Not authorized', 403, 'ACCESS_DENIED');
+            }
+            const { title, message } = notification_service_1.default.getNotificationDetails(notificationStatus, order.orderId, user_model_1.UserRole.CUSTOMER);
+            yield notification_service_1.default.createManualOrderNotification(order.customerId, user_model_1.UserRole.CUSTOMER, order._id, notificationStatus, title, message, {
+                orderStatus: notificationStatus,
+            });
+            return order;
+        });
+    }
     getOrderById(orderId, userId, role) {
         return __awaiter(this, void 0, void 0, function* () {
             const order = yield order_model_1.Order.findOne({

@@ -55,9 +55,29 @@ const stripe_1 = __importDefault(require("../config/stripe"));
 const AppError_1 = __importDefault(require("../utils/AppError"));
 const PRICE_PER_MEAL = 5.99;
 const PLATFORM_FEE_PER_MEAL = 0.50;
+const FREE_MEAL_COOLDOWN_HOURS = 48;
 class MealTokenService {
     roundMoney(value) {
         return Number.isFinite(value) ? parseFloat(value.toFixed(2)) : 0;
+    }
+    getFreeMealCooldownStart() {
+        return new Date(Date.now() - FREE_MEAL_COOLDOWN_HOURS * 60 * 60 * 1000);
+    }
+    getFreeMealCooldownEndsAt(date) {
+        return new Date(date.getTime() + FREE_MEAL_COOLDOWN_HOURS * 60 * 60 * 1000);
+    }
+    formatFreeMealCooldownMessage(date) {
+        const cooldownEndsAt = this.getFreeMealCooldownEndsAt(date);
+        return `You can claim one free donated meal every 48 hours. Please try again after ${cooldownEndsAt.toLocaleString()}.`;
+    }
+    getReusableClaimedToken(claimerUserId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return mealToken_model_1.MealToken.findOne({
+                claimedByUserId: new mongoose_1.Types.ObjectId(claimerUserId),
+                status: mealToken_model_1.MealTokenStatus.CLAIMED,
+                claimedOrderId: null,
+            }).sort({ claimedAt: -1 });
+        });
     }
     calculateDonationBreakdown(donorUserId, mealCount) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -245,29 +265,53 @@ class MealTokenService {
     }
     claimFreeMeal(claimerUserId, tokenId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const todayStart = new Date();
-            todayStart.setHours(0, 0, 0, 0);
-            const todayEnd = new Date();
-            todayEnd.setHours(23, 59, 59, 999);
-            const todayClaimed = yield mealToken_model_1.MealToken.countDocuments({
-                claimedByUserId: new mongoose_1.Types.ObjectId(claimerUserId),
-                claimedAt: { $gte: todayStart, $lte: todayEnd },
-                status: mealToken_model_1.MealTokenStatus.CLAIMED,
-            });
-            if (todayClaimed >= 100) {
-                throw new AppError_1.default('You have reached the daily limit of 100 free meals', 400, 'DAILY_LIMIT_REACHED');
+            const claimerObjectId = new mongoose_1.Types.ObjectId(claimerUserId);
+            const reusableToken = yield this.getReusableClaimedToken(claimerUserId);
+            if (reusableToken) {
+                return {
+                    token: reusableToken,
+                    reusedExistingClaim: true,
+                    cooldownEndsAt: reusableToken.claimedAt
+                        ? this.getFreeMealCooldownEndsAt(reusableToken.claimedAt)
+                        : null,
+                };
+            }
+            const cooldownStart = this.getFreeMealCooldownStart();
+            const [recentClaim, recentFreeOrder] = yield Promise.all([
+                mealToken_model_1.MealToken.findOne({
+                    claimedByUserId: claimerObjectId,
+                    claimedAt: { $gte: cooldownStart },
+                    status: mealToken_model_1.MealTokenStatus.CLAIMED,
+                }).sort({ claimedAt: -1 }),
+                order_model_1.Order.findOne({
+                    customerId: claimerObjectId,
+                    paymentMethod: 'meal_token',
+                    createdAt: { $gte: cooldownStart },
+                }).sort({ createdAt: -1 }),
+            ]);
+            if (recentClaim === null || recentClaim === void 0 ? void 0 : recentClaim.claimedAt) {
+                throw new AppError_1.default(this.formatFreeMealCooldownMessage(recentClaim.claimedAt), 400, 'FREE_MEAL_COOLDOWN_ACTIVE');
+            }
+            if (recentFreeOrder === null || recentFreeOrder === void 0 ? void 0 : recentFreeOrder.createdAt) {
+                throw new AppError_1.default(this.formatFreeMealCooldownMessage(recentFreeOrder.createdAt), 400, 'FREE_MEAL_COOLDOWN_ACTIVE');
             }
             const token = yield mealToken_model_1.MealToken.findOneAndUpdate({ tokenId, status: mealToken_model_1.MealTokenStatus.AVAILABLE }, {
                 $set: {
                     status: mealToken_model_1.MealTokenStatus.CLAIMED,
-                    claimedByUserId: new mongoose_1.Types.ObjectId(claimerUserId),
+                    claimedByUserId: claimerObjectId,
                     claimedAt: new Date(),
                 },
             }, { new: true });
             if (!token) {
                 throw new AppError_1.default('Token not found or already claimed', 404, 'TOKEN_NOT_FOUND');
             }
-            return token;
+            return {
+                token,
+                reusedExistingClaim: false,
+                cooldownEndsAt: token.claimedAt
+                    ? this.getFreeMealCooldownEndsAt(token.claimedAt)
+                    : null,
+            };
         });
     }
     linkTokenToOrder(tokenId, orderId) {
@@ -281,6 +325,9 @@ class MealTokenService {
             if (!quantity || quantity < 1) {
                 throw new AppError_1.default('Quantity must be at least 1', 400, 'INVALID_QUANTITY');
             }
+            if (quantity !== 1) {
+                throw new AppError_1.default('A free donated meal token can only be used for 1 meal.', 400, 'INVALID_FREE_MEAL_QUANTITY');
+            }
             // 1. Verify token belongs to this user and is claimed (not yet used for order)
             const token = yield mealToken_model_1.MealToken.findOne({
                 tokenId,
@@ -293,19 +340,15 @@ class MealTokenService {
             if (token.claimedOrderId) {
                 throw new AppError_1.default('This token has already been used for an order', 400, 'TOKEN_ALREADY_USED');
             }
-            // 2. Check daily limit: 1 order per restaurant per day
-            const todayStart = new Date();
-            todayStart.setHours(0, 0, 0, 0);
-            const todayEnd = new Date();
-            todayEnd.setHours(23, 59, 59, 999);
-            const todayOrderFromThisRestaurant = yield order_model_1.Order.countDocuments({
+            // 2. Enforce one free meal order every 48 hours
+            const cooldownStart = this.getFreeMealCooldownStart();
+            const recentFreeOrder = yield order_model_1.Order.findOne({
                 customerId: new mongoose_1.Types.ObjectId(claimerUserId),
-                providerId: new mongoose_1.Types.ObjectId(providerId),
                 paymentMethod: 'meal_token',
-                createdAt: { $gte: todayStart, $lte: todayEnd },
-            });
-            if (todayOrderFromThisRestaurant >= 1) {
-                throw new AppError_1.default('You can only order once per restaurant per day using free meals. Try a different restaurant or come back tomorrow!', 400, 'RESTAURANT_DAILY_LIMIT_REACHED');
+                createdAt: { $gte: cooldownStart },
+            }).sort({ createdAt: -1 });
+            if (recentFreeOrder === null || recentFreeOrder === void 0 ? void 0 : recentFreeOrder.createdAt) {
+                throw new AppError_1.default(this.formatFreeMealCooldownMessage(recentFreeOrder.createdAt), 400, 'FREE_MEAL_COOLDOWN_ACTIVE');
             }
             // 3. Verify food exists and is available
             const { Food } = yield Promise.resolve().then(() => __importStar(require('../models/food.model')));
@@ -437,19 +480,29 @@ class MealTokenService {
     }
     getDailyQuota(userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const todayStart = new Date();
-            todayStart.setHours(0, 0, 0, 0);
-            const todayEnd = new Date();
-            todayEnd.setHours(23, 59, 59, 999);
-            const usedToday = yield mealToken_model_1.MealToken.countDocuments({
-                claimedByUserId: new mongoose_1.Types.ObjectId(userId),
-                claimedAt: { $gte: todayStart, $lte: todayEnd },
-                status: mealToken_model_1.MealTokenStatus.CLAIMED,
-            });
+            const userObjectId = new mongoose_1.Types.ObjectId(userId);
+            const reusableToken = yield this.getReusableClaimedToken(userId);
+            const latestFreeOrder = yield order_model_1.Order.findOne({
+                customerId: userObjectId,
+                paymentMethod: 'meal_token',
+            }).sort({ createdAt: -1 });
+            const latestClaimedAt = (reusableToken === null || reusableToken === void 0 ? void 0 : reusableToken.claimedAt) || null;
+            const latestFreeOrderAt = (latestFreeOrder === null || latestFreeOrder === void 0 ? void 0 : latestFreeOrder.createdAt) || null;
+            const latestActivityAt = latestClaimedAt && latestFreeOrderAt
+                ? new Date(Math.max(latestClaimedAt.getTime(), latestFreeOrderAt.getTime()))
+                : latestClaimedAt || latestFreeOrderAt;
+            const cooldownEndsAt = latestActivityAt
+                ? this.getFreeMealCooldownEndsAt(latestActivityAt)
+                : null;
+            const isEligibleNow = !cooldownEndsAt || cooldownEndsAt.getTime() <= Date.now();
             return {
-                dailyLimit: 100,
-                usedToday,
-                remaining: Math.max(0, 100 - usedToday),
+                claimFrequencyHours: FREE_MEAL_COOLDOWN_HOURS,
+                isEligibleNow,
+                cooldownEndsAt,
+                hasReusableClaimedToken: Boolean(reusableToken),
+                reusableTokenId: (reusableToken === null || reusableToken === void 0 ? void 0 : reusableToken.tokenId) || null,
+                latestClaimedAt,
+                latestFreeOrderAt,
             };
         });
     }

@@ -51,6 +51,12 @@ class SocketService {
         this.io.on('connection', (this.handleConnection.bind(this)));
         console.log('Socket.IO initialized with Notifications');
     }
+    emitNotificationToUser(recipientId, payload) {
+        if (!this.io || !recipientId) {
+            return;
+        }
+        this.io.to(recipientId).emit('notification', payload);
+    }
     handleConnection(socket) {
         const { userId, role } = socket.user;
         console.log(`User connected: ${userId} (${role})`);

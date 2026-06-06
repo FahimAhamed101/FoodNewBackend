@@ -199,6 +199,43 @@ class OrderService {
         return order;
     }
 
+    async sendProviderNotification(orderId: string, providerId: string, notificationStatus: OrderStatus.READY_FOR_PICKUP | OrderStatus.COMPLETED) {
+        const order = await Order.findOne({
+            $or: [
+                { orderId },
+                { _id: Types.ObjectId.isValid(orderId) ? new Types.ObjectId(orderId) : undefined }
+            ].filter(q => q._id !== undefined || q.orderId)
+        });
+
+        if (!order) {
+            throw new AppError('Order not found', 404, 'NOT_FOUND_ERROR');
+        }
+
+        if (order.providerId.toString() !== providerId) {
+            throw new AppError('Not authorized', 403, 'ACCESS_DENIED');
+        }
+
+        const { title, message } = notificationService.getNotificationDetails(
+            notificationStatus,
+            order.orderId,
+            UserRole.CUSTOMER,
+        );
+
+        await notificationService.createManualOrderNotification(
+            order.customerId,
+            UserRole.CUSTOMER,
+            order._id as Types.ObjectId,
+            notificationStatus,
+            title,
+            message,
+            {
+                orderStatus: notificationStatus,
+            },
+        );
+
+        return order;
+    }
+
     async getOrderById(orderId: string, userId: string, role: string) {
         const order = await Order.findOne({
             $or: [
