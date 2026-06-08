@@ -35,6 +35,9 @@ const authenticate = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
         if (!user) {
             return next(new AppError_1.default('The user belonging to this token no longer exists.', 401, 'AUTH_ERROR'));
         }
+        if (!user.isActive) {
+            return next(new AppError_1.default('Your account is deactivated. Please contact support.', 403, 'AUTH_ERROR'));
+        }
         req.token = token;
         req.user = {
             userId: user._id.toString(),

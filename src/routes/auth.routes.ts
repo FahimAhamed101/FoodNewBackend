@@ -40,5 +40,6 @@ router.post('/forgot-password', validate(forgotPasswordSchema), authController.f
 router.post('/verify-forgot-otp', validate(verifyForgotOtpSchema), authController.verifyForgotOtp);
 router.post('/reset-password', authenticate, validate(resetPasswordSchema), authController.resetPassword);
 router.post('/change-password', authenticate, validate(changePasswordSchema), authController.changePassword);
+router.delete(['/account', '/delete-account'], authenticate, authController.deleteAccount);
 
 export default router;

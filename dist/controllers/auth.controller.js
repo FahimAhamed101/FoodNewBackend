@@ -103,6 +103,18 @@ class AuthController {
             const result = yield auth_service_1.default.changePassword(userId, req.body);
             res.status(200).json(Object.assign({ success: true }, result));
         }));
+        this.deleteAccount = (0, catchAsync_1.catchAsync)((req, res) => __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.userId;
+            if (!userId) {
+                throw new Error('Authentication required');
+            }
+            const result = yield auth_service_1.default.deleteAccount(userId, req.token);
+            res.status(200).json({
+                success: true,
+                data: result,
+            });
+        }));
     }
 }
 exports.default = new AuthController();

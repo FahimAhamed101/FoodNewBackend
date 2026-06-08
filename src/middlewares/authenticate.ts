@@ -38,6 +38,10 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
             return next(new AppError('The user belonging to this token no longer exists.', 401, 'AUTH_ERROR'));
         }
 
+        if (!user.isActive) {
+            return next(new AppError('Your account is deactivated. Please contact support.', 403, 'AUTH_ERROR'));
+        }
+
         req.token = token;
         req.user = {
             userId: user._id.toString(),

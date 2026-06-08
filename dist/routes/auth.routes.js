@@ -29,4 +29,5 @@ router.post('/forgot-password', (0, validate_1.validate)(auth_validation_1.forgo
 router.post('/verify-forgot-otp', (0, validate_1.validate)(auth_validation_1.verifyForgotOtpSchema), auth_controller_1.default.verifyForgotOtp);
 router.post('/reset-password', authenticate_1.authenticate, (0, validate_1.validate)(auth_validation_1.resetPasswordSchema), auth_controller_1.default.resetPassword);
 router.post('/change-password', authenticate_1.authenticate, (0, validate_1.validate)(auth_validation_1.changePasswordSchema), auth_controller_1.default.changePassword);
+router.delete(['/account', '/delete-account'], authenticate_1.authenticate, auth_controller_1.default.deleteAccount);
 exports.default = router;

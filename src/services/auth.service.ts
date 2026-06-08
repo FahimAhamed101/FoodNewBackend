@@ -2,6 +2,11 @@ import { User, UserRole } from '../models/user.model';
 import { Profile } from '../models/profile.model';
 import { ProviderProfile } from '../models/providerProfile.model';
 import { Otp, OtpPurpose } from '../models/otp.model';
+import { Cart } from '../models/cart.model';
+import { Favorite } from '../models/favorite.model';
+import { Notification } from '../models/notification.model';
+import { PaymentMethod } from '../models/paymentMethod.model';
+import { Session } from '../models/session.model';
 import {
     generateToken,
     generateRefreshToken,
@@ -428,6 +433,95 @@ class AuthService {
         await user.save();
 
         return { message: 'Password changed successfully' };
+    }
+
+    async deleteAccount(userId: string, token?: string) {
+        const user = await User.findById(userId).select('+passwordHash');
+        if (!user) {
+            throw new AppError('User not found', 404);
+        }
+
+        const originalEmail = user.email;
+        const deletedEmail = `deleted-${user._id.toString()}@deleted.local`;
+
+        await Promise.all([
+            Profile.updateOne(
+                { userId: user._id },
+                {
+                    $set: {
+                        name: '',
+                        phone: '',
+                        address: '',
+                        city: '',
+                        state: '',
+                        profilePic: '',
+                        avatar: '',
+                        bio: '',
+                        isActive: false,
+                    },
+                    $unset: { dateOfBirth: 1 },
+                }
+            ),
+            ProviderProfile.updateOne(
+                { providerId: user._id },
+                {
+                    $set: {
+                        restaurantName: 'Deleted Restaurant',
+                        contactEmail: deletedEmail,
+                        phoneNumber: '0000000000',
+                        restaurantAddress: 'Deleted account',
+                        city: 'Deleted',
+                        state: 'Deleted',
+                        zipCode: '',
+                        verificationDocuments: [],
+                        isVerify: false,
+                        isActive: false,
+                        status: 'BLOCKED',
+                        blockReason: 'Account deleted by user',
+                    },
+                }
+            ),
+            Cart.deleteMany({ userId: user._id }),
+            Favorite.deleteMany({ userId: user._id }),
+            Notification.deleteMany({ userId: user._id }),
+            PaymentMethod.deleteMany({ userId: user._id }),
+            Otp.deleteMany({ email: originalEmail }),
+            Session.updateMany(
+                { userId: user._id, isRevoked: false },
+                {
+                    $set: {
+                        isRevoked: true,
+                        revokedAt: new Date(),
+                        revokedReason: 'Account deleted',
+                    },
+                }
+            ),
+        ]);
+
+        if (token) {
+            const decoded = jwt.decode(token) as { exp?: number } | null;
+            await BlacklistedToken.create({
+                token,
+                expiresAt: decoded?.exp ? new Date(decoded.exp * 1000) : new Date(Date.now() + 60 * 60 * 1000),
+            });
+        }
+
+        user.fullName = 'Deleted User';
+        user.email = deletedEmail;
+        user.passwordHash = undefined;
+        user.isEmailVerified = false;
+        user.isActive = false;
+        user.isSuspended = true;
+        user.suspendedReason = 'Account deleted by user';
+        user.suspendedAt = new Date();
+        user.phone = '';
+        user.profilePic = '';
+        user.googleId = undefined;
+        user.googleEmail = undefined;
+        user.googlePicture = undefined;
+        await user.save({ validateBeforeSave: false });
+
+        return { message: 'Account deleted successfully' };
     }
 }
 

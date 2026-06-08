@@ -104,6 +104,19 @@ class AuthController {
             ...result
         });
     });
+
+    deleteAccount = catchAsync(async (req: AuthRequest, res: Response) => {
+        const userId = req.user?.userId;
+        if (!userId) {
+            throw new Error('Authentication required');
+        }
+
+        const result = await authService.deleteAccount(userId, req.token);
+        res.status(200).json({
+            success: true,
+            data: result,
+        });
+    });
 }
 
 export default new AuthController();

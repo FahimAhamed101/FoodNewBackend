@@ -16,6 +16,11 @@ const user_model_1 = require("../models/user.model");
 const profile_model_1 = require("../models/profile.model");
 const providerProfile_model_1 = require("../models/providerProfile.model");
 const otp_model_1 = require("../models/otp.model");
+const cart_model_1 = require("../models/cart.model");
+const favorite_model_1 = require("../models/favorite.model");
+const notification_model_1 = require("../models/notification.model");
+const paymentMethod_model_1 = require("../models/paymentMethod.model");
+const session_model_1 = require("../models/session.model");
 const authUtils_1 = require("../utils/authUtils");
 const AppError_1 = __importDefault(require("../utils/AppError"));
 const emailService_1 = require("../utils/emailService");
@@ -374,6 +379,82 @@ class AuthService {
             user.passwordHash = passwordHash;
             yield user.save();
             return { message: 'Password changed successfully' };
+        });
+    }
+    deleteAccount(userId, token) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield user_model_1.User.findById(userId).select('+passwordHash');
+            if (!user) {
+                throw new AppError_1.default('User not found', 404);
+            }
+            const originalEmail = user.email;
+            const deletedEmail = `deleted-${user._id.toString()}@deleted.local`;
+            yield Promise.all([
+                profile_model_1.Profile.updateOne({ userId: user._id }, {
+                    $set: {
+                        name: '',
+                        phone: '',
+                        address: '',
+                        city: '',
+                        state: '',
+                        profilePic: '',
+                        avatar: '',
+                        bio: '',
+                        isActive: false,
+                    },
+                    $unset: { dateOfBirth: 1 },
+                }),
+                providerProfile_model_1.ProviderProfile.updateOne({ providerId: user._id }, {
+                    $set: {
+                        restaurantName: 'Deleted Restaurant',
+                        contactEmail: deletedEmail,
+                        phoneNumber: '0000000000',
+                        restaurantAddress: 'Deleted account',
+                        city: 'Deleted',
+                        state: 'Deleted',
+                        zipCode: '',
+                        verificationDocuments: [],
+                        isVerify: false,
+                        isActive: false,
+                        status: 'BLOCKED',
+                        blockReason: 'Account deleted by user',
+                    },
+                }),
+                cart_model_1.Cart.deleteMany({ userId: user._id }),
+                favorite_model_1.Favorite.deleteMany({ userId: user._id }),
+                notification_model_1.Notification.deleteMany({ userId: user._id }),
+                paymentMethod_model_1.PaymentMethod.deleteMany({ userId: user._id }),
+                otp_model_1.Otp.deleteMany({ email: originalEmail }),
+                session_model_1.Session.updateMany({ userId: user._id, isRevoked: false }, {
+                    $set: {
+                        isRevoked: true,
+                        revokedAt: new Date(),
+                        revokedReason: 'Account deleted',
+                    },
+                }),
+            ]);
+            if (token) {
+                const decoded = jsonwebtoken_1.default.decode(token);
+                yield blacklistedToken_model_1.BlacklistedToken.create({
+                    token,
+                    expiresAt: (decoded === null || decoded === void 0 ? void 0 : decoded.exp) ? new Date(decoded.exp * 1000) : new Date(Date.now() + 60 * 60 * 1000),
+                });
+            }
+            user.fullName = 'Deleted User';
+            user.email = deletedEmail;
+            user.passwordHash = undefined;
+            user.isEmailVerified = false;
+            user.isActive = false;
+            user.isSuspended = true;
+            user.suspendedReason = 'Account deleted by user';
+            user.suspendedAt = new Date();
+            user.phone = '';
+            user.profilePic = '';
+            user.googleId = undefined;
+            user.googleEmail = undefined;
+            user.googlePicture = undefined;
+            yield user.save({ validateBeforeSave: false });
+            return { message: 'Account deleted successfully' };
         });
     }
 }
